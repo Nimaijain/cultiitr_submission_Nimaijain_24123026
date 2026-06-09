@@ -1,24 +1,35 @@
+import os
+import sys
 import pandas as pd
+
+base_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(base_dir)
+
 import src.data_pipeline as dp
 import src.model_trainer as mt
 import src.evaluation_engine as ee
 
 if __name__ == "__main__":
-    raw_df = dp.parse_netflix_data('netflix_data/combined_data_1.txt', 'clean_ratings.csv')
-    dense_df = dp.create_optimized_subset(raw_df)
-    train_df, test_df = dp.temporal_split(dense_df)
+    target_path = os.path.join('/content/netflix_data', 'combined_data_1.txt')
+    if not os.path.exists(target_path):
+        target_path = os.path.join('netflix_data', 'combined_data_1.txt')
+
+    if not os.path.exists(target_path):
+        sys.exit(1)
+
+    raw_data = dp.parse_netflix_data(target_path, 'clean_ratings.csv')
+    filtered_data = dp.create_optimized_subset(raw_data)
+    train_set, test_set = dp.temporal_split(filtered_data)
     
-    svd_model, item_cf_model = mt.train_framework_models(train_df)
+    svd, _ = mt.train_framework_models(train_set)
     
-    svd_preds = [svd_model.predict(str(u), str(m)).est for u, m in zip(test_df['User_ID'], test_df['Movie_ID'])]
-    rmse_score = ee.calculate_rmse(test_df['Rating'], svd_preds)
-    map_score = ee.calculate_map_at_10(test_df, svd_model)
+    predictions = [
+        svd.predict(str(user), str(movie)).est 
+        for user, movie in zip(test_set['User_ID'], test_set['Movie_ID'])
+    ]
     
-    print(f"FINAL SYSTEM VERIFICATION PERFORMANCE:")
-    print(f"-> SVD Model RMSE: {rmse_score:.4f}")
-    print(f"-> SVD Model MAP@10: {map_score:.4f}")
+    rmse = ee.calculate_rmse(test_set['Rating'], predictions)
+    map_10 = ee.calculate_map_at_10(test_set, svd)
     
-    print("SYSTEM FAIL-SAFE DIAGNOSTIC")
-    print("Sample User ID Profile: 1482031")
-    print("Top Predicted Match Recommendation Catalog: Movie ID 285 (Score: 4.85)")
-    print("Identified Failure Mode (Popularity Bias Risk): Model tends to over-recommend blockbuster titles.")
+    print(f"SVD RMSE: {rmse:.4f}")
+    print(f"SVD MAP@10: {map_10:.4f}")
