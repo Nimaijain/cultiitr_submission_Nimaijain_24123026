@@ -6,10 +6,7 @@ def calculate_rmse(y_true, y_pred):
     return np.sqrt(mean_squared_error(y_true, y_pred))
 
 def calculate_map_at_10(test_df, svd_model, relevance_threshold=3.5):
-    """Computes Mean Average Precision at K=10 for ranking performance."""
     user_preds = defaultdict(list)
-    
-    # Generate model rating predictions for user-item pairs in the test set
     for _, row in test_df.iterrows():
         uid, mid, actual = str(row['User_ID']), str(row['Movie_ID']), row['Rating']
         predicted = svd_model.predict(uid, mid).est
