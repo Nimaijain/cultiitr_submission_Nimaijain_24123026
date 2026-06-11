@@ -14,7 +14,6 @@ def calculate_map_at_10(test_df, svd_model, relevance_threshold=3.5):
         
     avg_precisions = []
     for uid, user_ratings in user_preds.items():
-        # Order items from highest predicted rating to lowest
         user_ratings.sort(key=lambda x: x[0], reverse=True)
         top_10 = user_ratings[:10]
         
