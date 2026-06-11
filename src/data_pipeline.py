@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 
 def parse_netflix_data(raw_txt_path, output_csv_path, max_lines=10000000):
-    """Parses raw text headers to create a structured interaction matrix table."""
     if os.path.exists(output_csv_path):
         return pd.read_csv(output_csv_path)
 
@@ -27,7 +26,6 @@ def parse_netflix_data(raw_txt_path, output_csv_path, max_lines=10000000):
     return df
 
 def create_optimized_subset(df, min_user_activity=100, min_movie_popularity=200):
-    """Filters data for dense interaction segments to stabilize evaluations."""
     u_counts = df['User_ID'].value_counts()
     m_counts = df['Movie_ID'].value_counts()
     dense_df = df[
@@ -37,7 +35,6 @@ def create_optimized_subset(df, min_user_activity=100, min_movie_popularity=200)
     return dense_df
 
 def temporal_split(df, test_ratio=0.2):
-    """Splits data chronologically to mimic production environment patterns."""
     df = df.sort_values('Date').reset_index(drop=True)
     split_idx = int(len(df) * (1 - test_ratio))
     return df.iloc[:split_idx], df.iloc[split_idx:]
